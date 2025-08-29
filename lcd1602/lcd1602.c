@@ -3,10 +3,16 @@
 #include <linux/init.h>
 #include <linux/i2c.h>
 #include <linux/delay.h>
+#include <linux/fs.h>
+#include <linux/uaccess.h>
+#include <linux/device.h>
 
 #define I2C_BUS 1
 #define LCD_NAME "i2c_lcd"
 #define LCD_ADDR 0x27  // Change if your LCD uses different address
+
+#define DEVICE_NAME "lcd1602"
+#define LCD_MAX_BUF 80
 
 // PCF8574 pin mapping
 #define RS_BIT 0
@@ -16,6 +22,10 @@
 
 static struct i2c_adapter *lcd_i2c_adapter;
 static struct i2c_client  *lcd_i2c_client;
+static int lcd_major;
+
+static struct class *lcd_class;
+static struct device *lcd_device;
 
 // Backlight state
 static int lcd_backlight = 1;
@@ -51,7 +61,10 @@ static void lcd_send_byte(uint8_t val, uint8_t rs)
 
 // Commands/data
 static void lcd_cmd(uint8_t cmd) { lcd_send_byte(cmd, 0); }
-static void lcd_data(uint8_t data) { lcd_send_byte(data, 1); }
+static void lcd_data(uint8_t data) { 
+    pr_info("i2c_lcd: Writing %u\n", data);
+    lcd_send_byte(data, 1); 
+}
 
 // Clear display
 static void lcd_clear(void)
@@ -99,7 +112,6 @@ static int lcd_probe(struct i2c_client *client)
     lcd_i2c_client = client;
     lcd_init_hw();
     lcd_set_cursor(0, 0);
-    lcd_write_string("Hello, world");
     pr_info("i2c_lcd: LCD initialized\n");
     return 0;
 }
@@ -128,6 +140,54 @@ static struct i2c_driver lcd_driver = {
     .id_table = lcd_id,
 };
 
+
+
+static int lcd_open(struct inode *inode, struct file *file)
+{
+    return 0;
+}
+
+static int lcd_release(struct inode *inode, struct file *file)
+{
+    return 0;
+}
+
+static ssize_t lcd_write(struct file *file, const char __user *buf, size_t len, loff_t *ppos)
+{
+    char kbuf[LCD_MAX_BUF + 1];
+    size_t i, j;
+
+    if (len > LCD_MAX_BUF)
+        len = LCD_MAX_BUF;
+
+    if (copy_from_user(kbuf, buf, len))
+        return -EFAULT;
+
+    kbuf[len] = '\0';
+
+    // Remove newline (in-place)
+    for (i = 0, j = 0; i < len; i++) {
+        if (kbuf[i] != '\n')
+            kbuf[j++] = kbuf[i];
+    }
+    kbuf[j] = '\0';
+
+    lcd_clear();
+    lcd_set_cursor(0, 0);
+    lcd_write_string(kbuf);
+
+    return len;
+}
+
+static const struct file_operations lcd_fops = {
+    .owner = THIS_MODULE,
+    .open = lcd_open,
+    .release = lcd_release,
+    .write = lcd_write,
+};
+
+
+
 // Module init
 static int __init lcd_module_init(void)
 {
@@ -148,6 +208,29 @@ static int __init lcd_module_init(void)
     lcd_i2c_client = i2c_new_client_device(lcd_i2c_adapter, &board_info); // create client after driver
     i2c_put_adapter(lcd_i2c_adapter);
 
+    lcd_major = register_chrdev(0, DEVICE_NAME, &lcd_fops);
+    if (lcd_major < 0) {
+        pr_err("i2c_lcd: Failed to register char device\n");
+        return lcd_major;
+    }
+
+    pr_info("i2c_lcd: Char device /dev/%s registered with major %d\n", DEVICE_NAME, lcd_major);
+
+    lcd_class = class_create(DEVICE_NAME);
+    if (IS_ERR(lcd_class)) {
+        unregister_chrdev(lcd_major, DEVICE_NAME);
+        pr_err("i2c_lcd: Failed to create class\n");
+        return PTR_ERR(lcd_class);
+    }
+
+    lcd_device = device_create(lcd_class, NULL, MKDEV(lcd_major, 0), NULL, DEVICE_NAME);
+    if (IS_ERR(lcd_device)) {
+        class_destroy(lcd_class);
+        unregister_chrdev(lcd_major, DEVICE_NAME);
+        pr_err("i2c_lcd: Failed to create device\n");
+        return PTR_ERR(lcd_device);
+    }
+
     return 0;
 }
 
@@ -157,6 +240,10 @@ static void __exit lcd_module_exit(void)
 {
     i2c_unregister_device(lcd_i2c_client);
     i2c_del_driver(&lcd_driver);
+    unregister_chrdev(lcd_major, DEVICE_NAME);
+    device_destroy(lcd_class, MKDEV(lcd_major, 0));
+    class_destroy(lcd_class);
+    unregister_chrdev(lcd_major, DEVICE_NAME);
     pr_info("i2c_lcd: Module unloaded\n");
 }
 
