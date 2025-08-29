@@ -83,9 +83,27 @@ static void lcd_set_cursor(uint8_t row, uint8_t col)
 // Write string
 static void lcd_write_string(const char *str)
 {
-    while (*str)
-        lcd_data(*str++);
+    uint8_t row = 0, col = 0;
+
+    lcd_set_cursor(row, col);
+
+    while (*str) {
+        if (*str == '\n') {
+            row = 1;
+            col = 0;
+            lcd_set_cursor(row, col);
+        } else {
+            lcd_data(*str);
+            if (++col >= 16 && row == 0) {
+                row = 1;
+                col = 0;
+                lcd_set_cursor(row, col);
+            }
+        }
+        str++;
+    }
 }
+
 
 // Initialize LCD
 static void lcd_init_hw(void)
@@ -155,7 +173,6 @@ static int lcd_release(struct inode *inode, struct file *file)
 static ssize_t lcd_write(struct file *file, const char __user *buf, size_t len, loff_t *ppos)
 {
     char kbuf[LCD_MAX_BUF + 1];
-    size_t i, j;
 
     if (len > LCD_MAX_BUF)
         len = LCD_MAX_BUF;
@@ -164,13 +181,6 @@ static ssize_t lcd_write(struct file *file, const char __user *buf, size_t len, 
         return -EFAULT;
 
     kbuf[len] = '\0';
-
-    // Remove newline (in-place)
-    for (i = 0, j = 0; i < len; i++) {
-        if (kbuf[i] != '\n')
-            kbuf[j++] = kbuf[i];
-    }
-    kbuf[j] = '\0';
 
     lcd_clear();
     lcd_set_cursor(0, 0);
