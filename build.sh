@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+git submodule init
+git submodule sync
+git submodule update
+
 source poky/oe-init-build-env
 
 LAYERS_DIR=$(pwd)/..
