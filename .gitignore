@@ -4,3 +4,4 @@
 *.ko
 *.mod*
 *.order
+build/
