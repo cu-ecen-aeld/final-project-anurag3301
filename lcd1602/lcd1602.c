@@ -9,12 +9,11 @@
 
 #define I2C_BUS 1
 #define LCD_NAME "i2c_lcd"
-#define LCD_ADDR 0x27  // Change if your LCD uses different address
+#define LCD_ADDR 0x27  // I2C Address of driver
 
 #define DEVICE_NAME "lcd1602"
 #define LCD_MAX_BUF 80
 
-// PCF8574 pin mapping
 #define RS_BIT 0
 #define EN_BIT 2
 #define BL_BIT 3
@@ -27,16 +26,13 @@ static int lcd_major;
 static struct class *lcd_class;
 static struct device *lcd_device;
 
-// Backlight state
 static int lcd_backlight = 1;
 
-// Low-level I2C write
 static int lcd_i2c_write(uint8_t *buf, int len)
 {
     return i2c_master_send(lcd_i2c_client, buf, len);
 }
 
-// Pulse enable
 static void lcd_pulse(uint8_t data)
 {
     lcd_i2c_write((uint8_t[]){ data | (1<<EN_BIT) }, 1);
@@ -45,42 +41,36 @@ static void lcd_pulse(uint8_t data)
     udelay(100);
 }
 
-// Send 4-bit nibble
 static void lcd_send_nibble(uint8_t nibble, uint8_t rs)
 {
     uint8_t data = (nibble << D4_BIT) | (rs << RS_BIT) | (lcd_backlight << BL_BIT);
     lcd_pulse(data);
 }
 
-// Send full byte
 static void lcd_send_byte(uint8_t val, uint8_t rs)
 {
     lcd_send_nibble(val >> 4, rs);
     lcd_send_nibble(val & 0x0F, rs);
 }
 
-// Commands/data
 static void lcd_cmd(uint8_t cmd) { lcd_send_byte(cmd, 0); }
 static void lcd_data(uint8_t data) { 
     pr_info("i2c_lcd: Writing %u\n", data);
     lcd_send_byte(data, 1); 
 }
 
-// Clear display
 static void lcd_clear(void)
 {
     lcd_cmd(0x01);
     msleep(2);
 }
 
-// Set cursor
 static void lcd_set_cursor(uint8_t row, uint8_t col)
 {
     uint8_t addr = col + (row ? 0x40 : 0x00);
     lcd_cmd(0x80 | addr);
 }
 
-// Write string
 static void lcd_write_string(const char *str)
 {
     uint8_t row = 0, col = 0;
@@ -105,7 +95,6 @@ static void lcd_write_string(const char *str)
 }
 
 
-// Initialize LCD
 static void lcd_init_hw(void)
 {
     msleep(50);
@@ -124,7 +113,6 @@ static void lcd_init_hw(void)
     lcd_cmd(0x06); // Entry mode
 }
 
-// Probe
 static int lcd_probe(struct i2c_client *client)
 {
     lcd_i2c_client = client;
@@ -134,7 +122,6 @@ static int lcd_probe(struct i2c_client *client)
     return 0;
 }
 
-// Remove
 static void lcd_remove(struct i2c_client *client)
 {
     lcd_clear();
@@ -147,7 +134,6 @@ static const struct i2c_device_id lcd_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, lcd_id);
 
-// I2C driver structure
 static struct i2c_driver lcd_driver = {
     .driver = {
         .name = LCD_NAME,
@@ -198,12 +184,11 @@ static const struct file_operations lcd_fops = {
 
 
 
-// Module init
 static int __init lcd_module_init(void)
 {
     int ret;
 
-    ret = i2c_add_driver(&lcd_driver);  // register driver first
+    ret = i2c_add_driver(&lcd_driver);
     if (ret)
         return ret;
 
@@ -245,7 +230,6 @@ static int __init lcd_module_init(void)
 }
 
 
-// Module exit
 static void __exit lcd_module_exit(void)
 {
     i2c_unregister_device(lcd_i2c_client);

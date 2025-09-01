@@ -56,7 +56,6 @@ static ssize_t gpio_read(struct file *file, char __user *buf,
     return 2;
 }
 
-// File operations structure
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .write = gpio_write,
@@ -69,18 +68,15 @@ static int __init gpio_driver_init(void)
 
     pr_info("GPIO Driver Init\n");
 
-    // Request GPIO
     ret = gpio_request(GPIO_PIN, "rpi_gpio");
     if (ret) {
         pr_err("Failed to request GPIO %d\n", GPIO_PIN);
         return ret;
     }
 
-    // Set as output and drive low initially
-    gpio_direction_output(GPIO_PIN, 0);
+    gpio_direction_output(GPIO_PIN, 0);     // Set gpio as output
     gpio_set_value(GPIO_PIN, 0);
 
-    // Register character device
     major_num = register_chrdev(0, DEVICE_NAME, &fops);
     if (major_num < 0) {
         pr_err("Failed to register char device\n");
@@ -88,7 +84,6 @@ static int __init gpio_driver_init(void)
         return major_num;
     }
 
-    // Create class
     gpio_class = class_create("gpio_class");
     if (IS_ERR(gpio_class)) {
         unregister_chrdev(major_num, DEVICE_NAME);
@@ -118,8 +113,8 @@ static void __exit gpio_driver_exit(void)
 {
     pr_info("GPIO Driver Exit\n");
 
-    gpio_set_value(GPIO_PIN, 0);   // Set LOW
-    gpio_free(GPIO_PIN);           // Free GPIO
+    gpio_set_value(GPIO_PIN, 0);
+    gpio_free(GPIO_PIN);
 
     device_destroy(gpio_class, MKDEV(major_num, 0));
     class_destroy(gpio_class);
