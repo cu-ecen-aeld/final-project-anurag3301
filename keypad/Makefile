@@ -12,6 +12,7 @@ clean:
 
 install:
 	sudo insmod keypad.ko
+	sudo chmod 666 /dev/keypad
 
 uninstall:
 	sudo rmmod keypad
