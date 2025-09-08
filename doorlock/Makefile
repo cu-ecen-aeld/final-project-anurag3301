@@ -6,6 +6,9 @@ all:
 clean:
 	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) clean
 
+modules_install:
+	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules_install
+
 install:
 	sudo insmod doorlock.ko
 	sudo chmod 666 /dev/doorlock
