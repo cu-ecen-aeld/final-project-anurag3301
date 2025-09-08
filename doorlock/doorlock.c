@@ -66,11 +66,11 @@ static int __init gpio_driver_init(void)
 {
     int ret;
 
-    pr_info("GPIO Driver Init\n");
+    pr_info("Doorlock: GPIO Driver Init\n");
 
     ret = gpio_request(GPIO_PIN, "rpi_gpio");
     if (ret) {
-        pr_err("Failed to request GPIO %d\n", GPIO_PIN);
+        pr_err("Doorlock: Failed to request GPIO %d\n", GPIO_PIN);
         return ret;
     }
 
@@ -79,7 +79,7 @@ static int __init gpio_driver_init(void)
 
     major_num = register_chrdev(0, DEVICE_NAME, &fops);
     if (major_num < 0) {
-        pr_err("Failed to register char device\n");
+        pr_err("Doorlock: Failed to register char device\n");
         gpio_free(GPIO_PIN);
         return major_num;
     }
@@ -88,7 +88,7 @@ static int __init gpio_driver_init(void)
     if (IS_ERR(gpio_class)) {
         unregister_chrdev(major_num, DEVICE_NAME);
         gpio_free(GPIO_PIN);
-        pr_err("Failed to create class\n");
+        pr_err("Doorlock: Failed to create class\n");
         return PTR_ERR(gpio_class);
     }
 
@@ -99,11 +99,11 @@ static int __init gpio_driver_init(void)
         class_destroy(gpio_class);
         unregister_chrdev(major_num, DEVICE_NAME);
         gpio_free(GPIO_PIN);
-        pr_err("Failed to create device\n");
+        pr_err("Doorlock: Failed to create device\n");
         return PTR_ERR(gpio_device);
     }
 
-    pr_info("GPIO %d ready, char device /dev/%s with major %d\n",
+    pr_info("Doorlock: GPIO %d ready, char device /dev/%s with major %d\n",
             GPIO_PIN, DEVICE_NAME, major_num);
 
     return 0;
@@ -111,7 +111,7 @@ static int __init gpio_driver_init(void)
 
 static void __exit gpio_driver_exit(void)
 {
-    pr_info("GPIO Driver Exit\n");
+    pr_info("Doorlock: GPIO Driver Exit\n");
 
     gpio_set_value(GPIO_PIN, 0);
     gpio_free(GPIO_PIN);
@@ -120,7 +120,7 @@ static void __exit gpio_driver_exit(void)
     class_destroy(gpio_class);
     unregister_chrdev(major_num, DEVICE_NAME);
 
-    pr_info("GPIO %d released, char device unregistered\n", GPIO_PIN);
+    pr_info("Doorlock: GPIO %d released, char device unregistered\n", GPIO_PIN);
 }
 
 module_init(gpio_driver_init);

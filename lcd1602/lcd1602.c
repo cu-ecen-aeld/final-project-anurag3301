@@ -55,7 +55,6 @@ static void lcd_send_byte(uint8_t val, uint8_t rs)
 
 static void lcd_cmd(uint8_t cmd) { lcd_send_byte(cmd, 0); }
 static void lcd_data(uint8_t data) { 
-    pr_info("i2c_lcd: Writing %u\n", data);
     lcd_send_byte(data, 1); 
 }
 
