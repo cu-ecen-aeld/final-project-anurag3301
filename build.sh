@@ -13,6 +13,10 @@ if ! grep -q "meta-raspberrypi" conf/bblayers.conf; then
     bitbake-layers add-layer "$LAYERS_DIR/meta-raspberrypi"
 fi
 
+if ! grep -q "meta-lockpi" conf/bblayers.conf; then
+    bitbake-layers add-layer "$LAYERS_DIR/meta-lockpi"
+fi
+
 for layer in meta-oe meta-python meta-networking; do
     if ! grep -q "$layer" conf/bblayers.conf; then
         bitbake-layers add-layer "$LAYERS_DIR/meta-openembedded/$layer"
@@ -28,6 +32,6 @@ else
 fi
 
 echo "Layers added and MACHINE set to raspberrypi4-64"
-echo " -------- Building core-image-minimal ----------"
+echo " -------- Building lockpi-image ----------"
 
-bitbake core-image-minimal
+bitbake lockpi-image
