@@ -10,12 +10,17 @@
 #include <linux/slab.h>
 #include <linux/wait.h>
 #include <linux/sched.h>
+#include <linux/ioctl.h>
 
 #define DIM 4
 #define BUF_SIZE 10
 
 #define DEVICE_NAME "keypad"
 static DECLARE_WAIT_QUEUE_HEAD(keypad_wq);
+
+
+#define KEYPAD_MAGIC 'K'
+#define KEYPAD_FLUSH_BUFFER _IO(KEYPAD_MAGIC, 0)
 
 static int major_num;
 static struct class *keypad_class = NULL;
@@ -50,7 +55,7 @@ static void dump_buf(void){
     for(int i=key_buffer.head+1, j=0; i%BUF_SIZE!=key_buffer.tail; i=(i+1)%BUF_SIZE, j++){
         buf[j] = key_buffer.buf[i];
     }
-    pr_info("Buffer: %s\n", buf);
+    pr_info("Keypad: Buffer: %s\n", buf);
 }
 
 static void push_buf(char c){
@@ -125,7 +130,7 @@ static void debounce_work_func(struct work_struct *work)
             for (int row_idx = 0; row_idx < DIM; row_idx++) {
                 int row_val = gpio_get_value(rows[row_idx]);
                 if (row_val == 0) {
-                    pr_info("Key pressed at row %d, col %d (GPIO Row %d, Col %d)\n",
+                    pr_info("Keypad: Key pressed at row %d, col %d (GPIO Row %d, Col %d)\n",
                             row_idx, col_idx, rows[row_idx], cols[col_idx]);
                     push_buf(button_map[row_idx][col_idx]);
                     dump_buf();
@@ -141,11 +146,25 @@ static void debounce_work_func(struct work_struct *work)
     enable_irq(data->irq);
 }
 
+static long keypad_ioctl(struct file *file, unsigned int cmd, unsigned long arg){
+    switch(cmd){
+        case KEYPAD_FLUSH_BUFFER:
+            key_buffer.head = 0;
+            key_buffer.tail = 1;
+            pr_info("Keypad: Buffer flushed!\n");
+            break;
+        default:
+            return -EINVAL;
+    }
+
+    return 0;
+}
 
 
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .read  = keypad_read,
+    .unlocked_ioctl = keypad_ioctl,
 };
 
 static int __init keypad_init(void){

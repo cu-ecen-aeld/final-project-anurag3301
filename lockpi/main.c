@@ -3,8 +3,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include "socket.h"
 #include "person.h"
+
+
+#define KEYPAD_MAGIC 'K'
+#define KEYPAD_FLUSH_BUFFER _IO(KEYPAD_MAGIC, 0)
 
 extern Person person_list[MAX_PERSON];
 extern int person_count;
@@ -38,6 +43,11 @@ int main(){
     char lcd_buf[33];
     int fd = open("/dev/keypad", O_RDONLY);
 
+    if (ioctl(fd, KEYPAD_FLUSH_BUFFER) == -1) {
+        perror("ioctl failed");
+        return 1;
+    }
+
     snprintf(lcd_buf, 32, "Enter Passkey\n%s", passkey_buf);
     display_lcd(lcd_buf);
     door_control('0');
@@ -67,6 +77,11 @@ int main(){
             snprintf(lcd_buf, 32, "Enter Passkey\n%s", passkey_buf);
             display_lcd(lcd_buf);
             door_control('0');
+
+            if (ioctl(fd, KEYPAD_FLUSH_BUFFER) == -1) {
+                perror("ioctl failed");
+                return 1;
+            }
         }
     }
     free_list();
