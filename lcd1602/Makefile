@@ -1,14 +1,10 @@
 obj-m += lcd1602.o
 
-KDIR := /lib/modules/$(shell uname -r)/build
-
-PWD := $(shell pwd)
-
 all:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules
 
 clean:
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) clean
 
 install:
 	sudo insmod lcd1602.ko
