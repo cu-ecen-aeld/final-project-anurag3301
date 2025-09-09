@@ -9,11 +9,13 @@
 Person person_list[MAX_PERSON];
 int person_count;
 
+#define PASSKEYFILE FILEPATH "/passkey.txt"
+
 int init_list(){
     person_count = 0;
-    FILE *file = fopen(FILEPATH, "r");
+    FILE *file = fopen(PASSKEYFILE, "r");
     if (file == NULL) {
-        printf("Couldnt open file %s\n", FILEPATH);
+        printf("Couldnt open file %s\n", PASSKEYFILE);
         return 1;
     }
 
@@ -45,7 +47,7 @@ void dump_list(){
 }
 
 void add_person(Person p){
-    FILE *file = fopen(FILEPATH, "a");
+    FILE *file = fopen(PASSKEYFILE, "a");
     if (file == NULL) {
         return;
     }

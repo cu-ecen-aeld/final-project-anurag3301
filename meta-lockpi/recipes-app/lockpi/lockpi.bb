@@ -7,7 +7,7 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/git/lockpi"
 
-EXTRA_OEMAKE = 'CFLAGS="-Wall -Wextra -DFILEPATH=\\\"${sysconfdir}/lockpi/passkey.txt\\\""'
+EXTRA_OEMAKE = 'CFLAGS="-Wall -Wextra -DFILEPATH=\\\"${sysconfdir}/lockpi\\\""'
 
 do_install() {
     install -d ${D}${bindir}

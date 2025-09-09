@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include "person.h"
+#include "socket.h"
 
 #define PORT 12345
 #define MAX_CLIENTS 10
@@ -75,6 +76,22 @@ void* handle_client(void* arg) {
 
             int bytes = snprintf(msg_buf, sizeof(msg_buf), "END\n");
             send(client->sockfd, msg_buf, bytes, 0);
+        }
+        else if(buffer[0] == 'H'){
+            FILE *fp = fopen(UNLOCKLOGFILE, "r");
+            if (!fp) {
+                perror("fopen");
+                const char *err = "ERROR: Cannot open file\n";
+                send(client->sockfd, err, strlen(err), 0);
+            } else {
+                char line[1024];
+                while (fgets(line, sizeof(line), fp)) {
+                    send(client->sockfd, line, strlen(line), 0);
+                }
+                fclose(fp);
+
+                send(client->sockfd, "END\n", 4, 0);
+            }
         }
         else{
             bytes = sprintf(buffer, "Invalid command\n");

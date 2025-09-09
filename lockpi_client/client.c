@@ -11,14 +11,14 @@
 
 int sockfd;
 
-void handle_list() {
+void handle_list(char *mode) {
     FILE* sock_file = fdopen(sockfd, "r");
     if (!sock_file) {
         perror("fdopen");
         return;
     }
     
-    send(sockfd, "L", 1, 0);
+    send(sockfd, mode, 1, 0);
     
     char line[1024];
     
@@ -76,7 +76,11 @@ void handle_new() {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if(argc != 2){
+        printf("Usage ./client <ip>\n");
+        return 1;
+    }
     struct sockaddr_in server_addr;
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -84,7 +88,7 @@ int main() {
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
-    inet_pton(AF_INET, "192.168.1.9", &server_addr.sin_addr);
+    inet_pton(AF_INET, argv[1], &server_addr.sin_addr);
 
     if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("connect"); exit(1);
@@ -103,11 +107,16 @@ int main() {
         input[strcspn(input, "\n")] = '\0';
 
         if (strcmp(input, "LIST") == 0) {
-            handle_list();
-        } else if (strcmp(input, "NEW") == 0) {
+            handle_list("L");
+        } 
+        else if (strcmp(input, "NEW") == 0) {
             handle_new();
-        } else {
-            printf("Invalid command. Use LIST or NEW.\n");
+        }
+        else if (strcmp(input, "HISTORY") == 0) {
+            handle_list("H");
+        }
+        else {
+            printf("Invalid command. Use LIST, HISTORY or NEW.\n");
         }
     }
 

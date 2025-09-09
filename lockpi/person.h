@@ -4,7 +4,7 @@
 
 #define MAX_PERSON 50
 #ifndef FILEPATH
-#define FILEPATH "passkey.txt"
+#define FILEPATH "."
 #endif
 
 typedef struct {

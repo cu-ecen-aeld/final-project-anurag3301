@@ -1,7 +1,7 @@
 # Allow overriding compiler and flags
 CC ?= gcc
 FILEPATH ?= passkey.txt
-CFLAGS ?= -Wall -Wextra
+CFLAGS ?= -Wall -Wextra -g
 LDFLAGS ?=
 
 OBJS = main.o socket.o person.o
