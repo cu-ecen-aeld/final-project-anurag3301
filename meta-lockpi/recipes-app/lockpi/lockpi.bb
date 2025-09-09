@@ -7,9 +7,7 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/git/lockpi"
 
-do_compile() {
-    oe_runmake FILEPATH="${sysconfdir}/lockpi/passkey.txt"
-}
+EXTRA_OEMAKE = 'CFLAGS="-Wall -Wextra -DFILEPATH=\\\"${sysconfdir}/lockpi/passkey.txt\\\""'
 
 do_install() {
     install -d ${D}${bindir}

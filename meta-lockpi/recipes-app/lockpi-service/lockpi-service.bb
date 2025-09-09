@@ -1,6 +1,6 @@
 SUMMARY = "Startup service for lockpi application"
 LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://lockpi.init;md5=0a5f57f309b9814d04cac6c989796764"
+LIC_FILES_CHKSUM = "file://lockpi.init;md5=24c6ba44bfb98eeb80cc6e71496e6873"
 
 SRC_URI = "file://lockpi.init"
 

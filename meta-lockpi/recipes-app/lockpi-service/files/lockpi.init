@@ -12,14 +12,21 @@ DAEMON=/usr/bin/lockpi
 PIDFILE=/var/run/lockpi.pid
 NAME=lockpi
 
+# Default config
+CONFIG_DIR=/etc/lockpi
+LOGFILE=/var/log/lockpi.log
+
 start() {
     echo "Starting $NAME..."
-    start-stop-daemon --start --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON
+    # Clear old log and redirect stdout/stderr
+    : > "$LOGFILE"
+    start-stop-daemon --start --background --make-pidfile --pidfile "$PIDFILE" \
+        --exec "$DAEMON" -- >>"$LOGFILE" 2>&1
 }
 
 stop() {
     echo "Stopping $NAME..."
-    start-stop-daemon --stop --pidfile $PIDFILE
+    start-stop-daemon --stop --pidfile "$PIDFILE"
 }
 
 case "$1" in
