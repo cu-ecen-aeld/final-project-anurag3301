@@ -8,12 +8,15 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/git/lockpi"
 
 do_compile() {
-    oe_runmake
+    oe_runmake FILEPATH="${sysconfdir}/lockpi/passkey.txt"
 }
 
 do_install() {
     install -d ${D}${bindir}
     install -m 0755 lockpi ${D}${bindir}/lockpi
+
+    install -d ${D}${sysconfdir}/lockpi
+    install -m 0644 passkey.txt ${D}${sysconfdir}/lockpi/passkey.txt
 }
 
-FILES:${PN} += "${bindir}/lockpi"
+FILES:${PN} += "${bindir}/lockpi ${sysconfdir}/lockpi/passkey.txt"

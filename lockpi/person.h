@@ -3,7 +3,9 @@
 #define __PERSON_H
 
 #define MAX_PERSON 50
-#define FILEPATH  "passkey.txt"
+#ifndef FILEPATH
+#define FILEPATH "passkey.txt"
+#endif
 
 typedef struct {
     char passkey[7];
