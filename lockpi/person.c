@@ -13,6 +13,7 @@ int init_list(){
     person_count = 0;
     FILE *file = fopen(FILEPATH, "r");
     if (file == NULL) {
+        printf("Couldnt open file %s\n", FILEPATH);
         return 1;
     }
 
