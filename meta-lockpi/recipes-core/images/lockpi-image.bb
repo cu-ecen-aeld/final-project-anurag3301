@@ -8,7 +8,7 @@ LICENSE = "MIT"
 
 inherit core-image
 
-IMAGE_INSTALL:append = " doorlock keypad lcd1602"
+IMAGE_INSTALL:append = " doorlock keypad lcd1602 lockpi lockpi-service  openssh openssh-keygen"
 
 IMAGE_ROOTFS_SIZE ?= "8192"
 IMAGE_ROOTFS_EXTRA_SPACE:append = "${@bb.utils.contains("DISTRO_FEATURES", "systemd", " + 4096", "", d)}"
