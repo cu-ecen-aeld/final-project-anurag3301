@@ -1,21 +1,18 @@
-# Uncomment for parser DEBUG
-#DEFS=-DDEBUG
+# Allow overriding compiler and flags
+CC ?= gcc
+CFLAGS ?= -Wall -Wextra $(DEFS)
+LDFLAGS ?=
 
-OBJS=main.o socket.o person.o
+OBJS = main.o socket.o person.o
+TARGET = lockpi
 
-all: main
+all: $(TARGET)
 
-main: $(OBJS)
-	gcc -o $@ $(OBJS)
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
-main.o: main.c
-	gcc -o $@ -c main.c
-
-socket.o: socket.c socket.h
-	gcc -o $@ -c socket.c
-
-person.o: person.c person.h
-	gcc -o $@ -c person.c
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 clean:
-	rm -f *.o main
+	rm -f $(OBJS) $(TARGET)
